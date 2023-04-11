@@ -3,7 +3,7 @@ const multer = require("multer");
 const fs = require("fs");
 const {
   getCountryAndNotes,
-  addOrEditSellerNotes,
+  addSellerNotes,
 } = require("../controller/noteController");
 const { userAuthenticate } = require("../middleware/middleware");
 
@@ -58,7 +58,7 @@ router.post(
     { name: "upload_note", maxCount: 1 },
     { name: "note_preview", maxCount: 1 },
   ]),
-  addOrEditSellerNotes
+  addSellerNotes
 );
 
 module.exports = router;

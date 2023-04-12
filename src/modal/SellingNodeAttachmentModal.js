@@ -11,16 +11,15 @@ const SellerNotesAttachmentModal = sequelize.define(
       primaryKey: true,
       autoIncrement: true,
     },
-    note_id: {
+    noteid: {
       type: DataTypes.INTEGER,
       allowNull: false,
     },
-
     filename: {
       type: DataTypes.STRING,
       allowNull: false,
     },
-    filepath: {
+    file_path: {
       type: DataTypes.STRING,
       allowNull: false,
     },
@@ -49,7 +48,7 @@ const SellerNotesAttachmentModal = sequelize.define(
 );
 
 SellerNotesAttachmentModal.belongsTo(SellerNotesModal, {
-  foreignKey: "note_id",
+  foreignKey: "noteid",
 });
 
 module.exports = SellerNotesAttachmentModal;

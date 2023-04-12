@@ -67,6 +67,10 @@ const SellerNotesModal = sequelize.define(
       type: DataTypes.INTEGER,
       allowNull: true,
     },
+    course: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
     course_code: {
       type: DataTypes.STRING,
       allowNull: true,

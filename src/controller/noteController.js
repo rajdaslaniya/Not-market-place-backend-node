@@ -4,6 +4,10 @@ const NoteType = require("../modal/NoteTypesModal");
 const RefCategory = require("../modal/RefCategory");
 const SellerNotesModal = require("../modal/SellerNotesModal");
 const SellerNotesAttachmentModal = require("../modal/SellingNodeAttachmentModal");
+const User = require("../modal/UserModal");
+
+const Op = require("sequelize").Op;
+const sequelize = require("sequelize");
 
 const getCountryAndNotes = async (req, res) => {
   const countryData = await CountryModal.findAll({ where: { isactive: true } });
@@ -213,9 +217,187 @@ const getSellerNotesDetail = async (req, res) => {
   return res.status(404).json({ status: 404, message: "Note is not found" });
 };
 
+const getInProgressNote = async (req, res) => {
+  const { page = 1, limit = 10, search = "" } = req.query;
+  const { user_id } = req.headers;
+
+  try {
+    const draftID = await RefCategory.findOne({
+      where: {
+        refcategory: "Notes Status",
+        value: "Draft",
+        isactive: true,
+      },
+    });
+    const reviewID = await RefCategory.findOne({
+      where: {
+        refcategory: "Notes Status",
+        value: "In Review",
+        isactive: true,
+      },
+    });
+    const submitID = await RefCategory.findOne({
+      where: {
+        refcategory: "Notes Status",
+        value: "Submitted For Review",
+        isactive: true,
+      },
+    });
+    const noteDetail = await SellerNotesModal.findAll({
+      attributes: [
+        "id",
+        "title",
+        [sequelize.literal('"ref_category"."value"'), "status"],
+        [sequelize.literal('"notes_types"."name"'), "book_type"],
+        "created_date",
+      ],
+      where: {
+        [Op.or]: [
+          { title: { [Op.iLike]: `%${search}%` } },
+          {
+            "$ref_category.value$": { [Op.iLike]: `%${search}%` },
+          },
+          {
+            "$notes_types.name$": { [Op.iLike]: `%${search}%` },
+          },
+        ],
+        seller_id: user_id,
+        status: { [Op.or]: [draftID.id, submitID.id, reviewID.id] },
+      },
+      include: [
+        {
+          model: RefCategory,
+          required: true,
+          as: "ref_category",
+          attributes: [],
+        },
+        {
+          model: NoteType,
+          required: true,
+          as: "notes_types",
+          attributes: [],
+        },
+      ],
+      order: [["created_date", "DESC"]],
+      limit: limit,
+      offset: (page - 1) * limit,
+    });
+    const count = await SellerNotesModal.count({
+      where: {
+        [Op.or]: [
+          { title: { [Op.iLike]: `%${search}%` } },
+          {
+            "$ref_category.value$": { [Op.iLike]: `%${search}%` },
+          },
+          {
+            "$notes_types.name$": { [Op.iLike]: `%${search}%` },
+          },
+        ],
+        seller_id: user_id,
+        status: { [Op.or]: [draftID.id, submitID.id, reviewID.id] },
+      },
+      include: [
+        {
+          model: RefCategory,
+          required: true,
+          as: "ref_category",
+        },
+        {
+          model: NoteType,
+          required: true,
+          as: "notes_types",
+        },
+      ],
+      order: [["created_date", "DESC"]],
+      limit: limit,
+      offset: (page - 1) * limit,
+    });
+    res.status(200).json({
+      currentPage: Number(page),
+      totalPages: Math.ceil(count / limit),
+      noteDetail,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+const getPublishNote = async (req, res) => {
+  const { page = 1, limit = 10, search = "" } = req.query;
+  const { user_id } = req.headers;
+  try {
+    const publishedID = await RefCategory.findOne({
+      where: {
+        refcategory: "Notes Status",
+        value: "Published",
+        isactive: true,
+      },
+    });
+    const noteDetail = await SellerNotesModal.findAll({
+      attributes: [
+        "id",
+        "title",
+        "ispaid",
+        "sellingprice",
+        [sequelize.literal('"notes_types"."name"'), "book_type"],
+        "created_date",
+      ],
+      where: {
+        [Op.or]: [
+          { title: { [Op.iLike]: `%${search}%` } },
+          {
+            "$notes_types.name$": { [Op.iLike]: `%${search}%` },
+          },
+        ],
+        seller_id: user_id,
+        status: publishedID.id,
+      },
+      include: {
+        model: NoteType,
+        required: true,
+        as: "notes_types",
+        attributes: [],
+      },
+      order: [["created_date", "DESC"]],
+      limit: limit,
+      offset: (page - 1) * limit,
+    });
+    const count = await SellerNotesModal.count({
+      where: {
+        [Op.or]: [
+          { title: { [Op.iLike]: `%${search}%` } },
+          {
+            "$notes_types.name$": { [Op.iLike]: `%${search}%` },
+          },
+        ],
+        seller_id: user_id,
+        status: publishedID.id,
+      },
+      include: {
+        model: NoteType,
+        required: true,
+        as: "notes_types",
+      },
+      limit: limit,
+      offset: (page - 1) * limit,
+    });
+    res.status(200).json({
+      currentPage: Number(page),
+      totalPages: Math.ceil(count / limit),
+      noteDetail,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
 module.exports = {
   getCountryAndNotes,
   addSellerNotes,
   editSellerNotes,
   getSellerNotesDetail,
+  getInProgressNote,
+  getPublishNote,
 };

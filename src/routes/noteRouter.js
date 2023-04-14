@@ -6,6 +6,8 @@ const {
   addSellerNotes,
   editSellerNotes,
   getSellerNotesDetail,
+  getInProgressNote,
+  getPublishNote,
 } = require("../controller/noteController");
 const { userAuthenticate } = require("../middleware/middleware");
 
@@ -73,5 +75,7 @@ router.put(
   editSellerNotes
 );
 router.get("/note-detail/:note_id", userAuthenticate, getSellerNotesDetail);
+router.post("/in-progress-notes", userAuthenticate, getInProgressNote);
+router.post("/published-notes", userAuthenticate, getPublishNote);
 
 module.exports = router;

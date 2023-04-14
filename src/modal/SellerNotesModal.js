@@ -117,8 +117,14 @@ const SellerNotesModal = sequelize.define(
 
 SellerNotesModal.belongsTo(User, { foreignKey: "seller_id" });
 SellerNotesModal.belongsTo(User, { foreignKey: "actionedby" });
-SellerNotesModal.belongsTo(RefCategory, { foreignKey: "status" });
-SellerNotesModal.belongsTo(NoteType, { foreignKey: "note_types" });
+SellerNotesModal.belongsTo(RefCategory, {
+  foreignKey: "status",
+  as: "ref_category",
+});
+SellerNotesModal.belongsTo(NoteType, {
+  foreignKey: "note_types",
+  as: "notes_types",
+});
 SellerNotesModal.belongsTo(NoteCategory, { foreignKey: "category" });
 SellerNotesModal.belongsTo(CountryModal, { foreignKey: "country_id" });
 
